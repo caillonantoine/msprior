@@ -1,0 +1,43 @@
+from __gin__ import dynamic_registration
+
+include "decoder_only.gin"
+
+from msprior import attention
+from msprior import task
+from msprior import dataset
+
+from torch import nn
+
+
+NUM_ENCODER_TOKENS = 1024
+
+attention.Prior:
+    encoder_factory = @attention.Encoder
+
+attention.Encoder:
+    embedder = @encoder/attention.Embedding
+    layer_factory = @encoder/attention.TransformerLayer
+    num_layers = %NUM_LAYERS
+
+encoder/attention.Embedding:
+    num_embeddings = %NUM_ENCODER_TOKENS
+    embedding_dim = %MODEL_DIM
+
+encoder/attention.TransformerLayer:
+    attend_encoder_out = False
+    dropout_rate = 0.
+
+attention.Decoder:
+    layer_factory = @decoder/attention.TransformerLayer
+
+decoder/attention.TransformerLayer:
+    attend_encoder_out = True
+    encoder_out_ratio = 4
+
+dataset.SequenceDataset:
+    task_fn = @task.encoder_decoder_semantic_token
+
+task.encoder_decoder_semantic_token:
+    seq_len = %SEQ_LEN
+    encoder_key = "semantic_indices"
+    decoder_key = "rave"

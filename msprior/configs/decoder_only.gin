@@ -1,0 +1,76 @@
+from __gin__ import dynamic_registration
+
+import torch
+
+from msprior import attention
+from msprior import task
+from msprior import utils
+from msprior import dataset
+
+MODEL_DIM = 512
+NUM_TOKENS = 1024
+NUM_QUANTIZERS = 16
+DROPOUT_RATE = 0.01
+NUM_HEADS = 8
+SEQ_LEN = 256
+HEAD_DIM = 32
+NUM_LAYERS = 8
+
+PRETRAINED_RAVE = None
+
+attention.Prior:
+    decoder_factory = @attention.Decoder
+
+attention.Decoder:
+    embedder = @attention.MultivariateEmbedding
+    layer_factory = @attention.TransformerLayer
+    predictor = @attention.MultivariatePredictor
+    num_layers = %NUM_LAYERS
+
+attention.MultivariateEmbedding:
+    num_tokens = %NUM_TOKENS
+    num_features = %MODEL_DIM
+    num_quantizers = %NUM_QUANTIZERS
+    from_pretrained = %PRETRAINED_RAVE
+
+attention.TransformerLayer:
+    attention_factory = @attention.MultiHeadAlibiAttention
+    feed_forward_factory = @attention.FeedForward
+    dropout_rate = %DROPOUT_RATE
+    attend_encoder_out = False
+    model_dim = %MODEL_DIM
+    head_dim = %HEAD_DIM
+    num_heads = %NUM_HEADS
+
+attention.MultiHeadAlibiAttention:
+    n_head = %NUM_HEADS
+    max_seq_len = %SEQ_LEN
+
+attention.FeedForward:
+    input_dim = %MODEL_DIM
+
+attention.MultivariatePredictor:
+    dim = %MODEL_DIM
+    num_quantizers = %NUM_QUANTIZERS
+    num_tokens = %NUM_TOKENS
+    dropout_rate = %DROPOUT_RATE
+
+attention.Prior.configure_optimizers:
+    optimizer_cls = @torch.optim.AdamW
+    scheduler_cls = @utils.build_warmed_exponential_lr_scheduler
+
+utils.build_warmed_exponential_lr_scheduler:
+    start_factor = .01
+    peak_iteration = 10000
+    decay_factor = .9999985
+
+torch.optim.AdamW:
+    lr = 1e-3
+    betas = (.9, .99)
+
+dataset.SequenceDataset:
+    task_fn = @task.decoder_only_rave
+
+task.decoder_only_rave:
+    seq_len = %SEQ_LEN
+    decoder_key = "rave"

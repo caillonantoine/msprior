@@ -1,0 +1,13 @@
+include "decoder_only.gin"
+
+from __gin__ import dynamic_registration
+from msprior import attention
+
+attention.Decoder:
+    layer_factory = @attention.GRULayer
+    num_layers = 1
+
+attention.GRULayer:
+    dropout_rate = %DROPOUT_RATE
+    model_dim = %MODEL_DIM
+    num_layers = %NUM_LAYERS

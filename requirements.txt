@@ -1,0 +1,16 @@
+absl-py
+cached_conv
+einops
+gin-config
+GPUtil
+librosa
+lmdb
+nn_tilde
+numpy
+pathos
+pytest
+pytorch_lightning
+torch
+tqdm
+udls
+acids-rave

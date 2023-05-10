@@ -1,0 +1,2 @@
+include msprior/configs/*.gin
+include requirements.txt
