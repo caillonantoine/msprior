@@ -3,9 +3,7 @@ import sys
 
 from absl import app
 
-AVAILABLE_SCRIPTS = [
-    'preprocess', 'train', 'export', 'compact', 'eval', 'tokenize'
-]
+AVAILABLE_SCRIPTS = ['preprocess', 'train', 'export', 'compact']
 
 
 def help():

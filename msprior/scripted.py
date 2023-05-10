@@ -73,11 +73,10 @@ class ScriptedPrior(nn_tilde.Module):
             elif isinstance(encoder_embedder(), FeatureEmbedding):
                 if vae_path is not None:
                     self.encoder_input_type = "vae"
-                    self.feature_vae = torch.jit.load(
-                        vae_path).eval()
+                    self.feature_vae = torch.jit.load(vae_path).eval()
                     num_inputs += self.feature_vae.latent_size
                 else:
-                    num_inputs += 163 # TODO: put that somewhere in configuration files
+                    num_inputs += 163  # TODO: put that somewhere in configuration files
                     self.encoder_input_type = "full"
             else:
                 raise ValueError(
