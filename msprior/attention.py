@@ -54,13 +54,13 @@ class MultiHeadAlibiAttention(nn.Module):
     @torch.jit.unused
     def init_kv_cache(self, k: torch.Tensor, v: torch.Tensor):
         self._keys_cache = torch.zeros(
-            k.shape[0],
+            cc.MAX_BATCH_SIZE,
             k.shape[1],
             self._max_seq_len,
             k.shape[-1],
         ).type_as(k)
         self._values_cache = torch.zeros(
-            v.shape[0],
+            cc.MAX_BATCH_SIZE,
             v.shape[1],
             self._max_seq_len,
             v.shape[-1],
@@ -73,15 +73,15 @@ class MultiHeadAlibiAttention(nn.Module):
         input_length = k.shape[2]
 
         if input_length > self._max_seq_len:
-            k = k[:, :, -self._max_seq_len:]
+            k = k[:k.shape[0], :, -self._max_seq_len:]
             v = v[:, :, -self._max_seq_len:]
             input_length = self._max_seq_len
 
         self._keys_cache = self._keys_cache.roll(-input_length, dims=2)
-        self._keys_cache[:, :, -input_length:] = k
+        self._keys_cache[:k.shape[0], :, -input_length:] = k
 
         self._values_cache = self._values_cache.roll(-input_length, dims=2)
-        self._values_cache[:, :, -input_length:] = v
+        self._values_cache[:k.shape[0], :, -input_length:] = v
 
         if self._cache_length < self._max_seq_len:
             self._cache_length += input_length
@@ -124,8 +124,8 @@ class MultiHeadAlibiAttention(nn.Module):
                 assert v is not None
                 self.update_cache(k, v)
 
-            k = self._keys_cache
-            v = self._values_cache
+            k = self._keys_cache[:q.shape[0]]
+            v = self._values_cache[:q.shape[0]]
 
         assert q is not None
         assert k is not None
