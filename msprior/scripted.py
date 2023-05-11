@@ -165,7 +165,7 @@ class ScriptedPrior(nn_tilde.Module):
             if self.encoder_input_type == "discrete":
                 semantic_tokens = x[:, self.num_rave_quantizers:]
                 semantic_tokens = semantic_tokens.reshape(
-                    semantic_tokens.shape[0],
+                    batch_size,
                     semantic_tokens.shape[1],
                     -1,
                     self.encoder_ratio,
@@ -180,7 +180,7 @@ class ScriptedPrior(nn_tilde.Module):
                 assert self.feature_vae is not None
                 latents = x[:, self.num_rave_quantizers:]
                 latents = latents.reshape(
-                    latents.shape[0],
+                    batch_size,
                     latents.shape[1],
                     -1,
                     self.encoder_ratio,
@@ -190,7 +190,7 @@ class ScriptedPrior(nn_tilde.Module):
             elif self.encoder_input_type == "full":
                 features = x[:, self.num_rave_quantizers:]
                 features = features.reshape(
-                    features.shape[0],
+                    batch_size,
                     features.shape[1],
                     -1,
                     self.encoder_ratio,

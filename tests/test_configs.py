@@ -33,5 +33,14 @@ def test_config(config, continuous, listen):
 
     model = ScriptedPrior(from_continuous=continuous, initial_listen=listen)
 
+    if listen and not continuous:
+        x = torch.randint(0, 16, (1, model.forward_params[0], 8)).float()
+        y = model(x)
+        assert torch.allclose(y[:, :-1].float(), x[:, :y.shape[1] - 1].float())
+
+        x = torch.randint(0, 16, (4, model.forward_params[0], 8)).float()
+        y = model(x)
+        assert torch.allclose(y[:, :-1].float(), x[:, :y.shape[1] - 1].float())
+
     with tempfile.TemporaryDirectory() as tmp:
         model.export_to_ts(os.path.join(tmp, "model.ts"))
