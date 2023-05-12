@@ -12,7 +12,7 @@ torch.set_grad_enabled(False)
 def main(argv):
     cc.use_cached_conv(True)
 
-    model = ScriptedPrior(FLAGS.run, FLAGS.temporal_ratio)
+    model = ScriptedPrior(FLAGS.run, FLAGS.temporal_ratio, FLAGS.continuous)
     model_name = os.path.basename(os.path.normpath(FLAGS.run)) + '.ts'
     export_path = os.path.join(FLAGS.run, model_name)
     model.export_to_ts(export_path)
@@ -25,4 +25,10 @@ flags.DEFINE_integer(
     'temporal_ratio',
     default=1024,
     help='Sequence temporal ratio',
+)
+flags.DEFINE_bool(
+    'continuous',
+    default=False,
+    help=
+    'dequantize predictions if rave model is continuous rather than discrete',
 )
