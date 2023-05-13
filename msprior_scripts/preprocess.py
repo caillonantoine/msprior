@@ -51,7 +51,7 @@ flags.DEFINE_integer('gpu', default=None, help='GPU to use.')
 flags.DEFINE_integer('db_size',
                      default=100,
                      help='Maximum size of the dataset (GB)')
-flags.DEFINE_integer('dyndb',
+flags.DEFINE_bool('dyndb',
                      default=True,
                      help='Allow the database to grow dynamically')
 flags.DEFINE_bool('normalize',
