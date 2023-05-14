@@ -254,6 +254,7 @@ class ScriptedPrior(nn_tilde.Module):
         return x
 
     def quantize(self, x):
+        x = x / 2
         x = .5 * (1 + torch.erf(x / math.sqrt(2)))
         x = torch.floor(x * self.num_tokens - 1).long()
         return x
@@ -261,7 +262,7 @@ class ScriptedPrior(nn_tilde.Module):
     def dequantize(self, x):
         x = x.float()
         x = (x + torch.rand_like(x)) / self.num_tokens
-        x = torch.erfinv(2 * x - 1) * math.sqrt(2)
+        x = torch.erfinv(2 * x - 1) * math.sqrt(2) * 2
         return x
 
     @torch.jit.export

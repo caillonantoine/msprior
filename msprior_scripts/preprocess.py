@@ -52,8 +52,8 @@ flags.DEFINE_integer('db_size',
                      default=100,
                      help='Maximum size of the dataset (GB)')
 flags.DEFINE_bool('dyndb',
-                     default=True,
-                     help='Allow the database to grow dynamically')
+                  default=True,
+                  help='Allow the database to grow dynamically')
 flags.DEFINE_bool('normalize',
                   default=False,
                   help="Normalize audio before preprocessing.")
@@ -62,7 +62,7 @@ flags.DEFINE_integer('silence_threshold',
                      help="Optional silence threshold (30 - 50).")
 flags.DEFINE_integer(
     'resolution',
-    default=32,
+    default=64,
     help="Discretization resolution to use when using continuous rave models.")
 
 
@@ -104,6 +104,7 @@ class RAVEEncoder(msprior.preprocessor.Preprocessor):
         self.resolution = FLAGS.resolution
 
     def quantize(self, x):
+        x = x / 2
         x = .5 * (1 + torch.erf(x / math.sqrt(2)))
         x = torch.floor(x * (self.resolution - 1))
         return x
