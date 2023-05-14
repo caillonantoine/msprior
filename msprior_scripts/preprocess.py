@@ -112,9 +112,9 @@ class RAVEEncoder(msprior.preprocessor.Preprocessor):
         audio_arrays = np.stack(audio_arrays, 0)
         audio_batch = torch.from_numpy(audio_arrays).float().reshape(
             audio_arrays.shape[0], 1, -1).to(self.device)
-        z = self.model.quantize(audio_batch).permute(0, 2, 1)
+        z = self.model.encode(audio_batch).permute(0, 2, 1)
         if self.from_continuous:
-            z = self.encode(z)
+            z = self.quantize(z)
         z = z.cpu().numpy()
         return z
 
