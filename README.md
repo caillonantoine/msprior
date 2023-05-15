@@ -78,6 +78,14 @@ Export your model to a `.ts` file that you can load inside the [nn~ external for
 msprior export --run /path/to/your/run
 ```
 
+**WARNING**
+
+If you are training on top of a *continuous* rave (i.e. anything but the `discrete` configuration), you shoud pass the `--continuous` flag during export
+
+```bash
+msprior export --run /path/to/your/run --continuous
+```
+
 ### 4. Realtime usage
 
 Once exported, you can load the model inside MaxMSP following the image below.
