@@ -39,7 +39,9 @@ flags.DEFINE_string('audio',
                     default=None,
                     required=True,
                     help='Path to the audio files')
-flags.DEFINE_integer('num_secs', default=8, help='Audio chunk size in seconds')
+flags.DEFINE_integer('num_secs',
+                     default=16,
+                     help='Audio chunk size in seconds')
 flags.DEFINE_integer('num_tokens', default=1024, help='Rave vocabulary size')
 flags.DEFINE_integer('batch_size',
                      default=64,

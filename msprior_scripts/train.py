@@ -37,6 +37,9 @@ flags.DEFINE_multi_string("override",
 flags.DEFINE_string("ckpt",
                     default=None,
                     help="checkpoint to resume training from.")
+flags.DEFINE_integer("val_every",
+                     default=1000,
+                     help="validate training every n step.")
 
 
 def add_ext(config: str):
@@ -58,9 +61,6 @@ def main(argv):
         overrides,
     )
 
-    logging.info("building model")
-    model = Prior()
-
     logging.info("loading dataset")
     dataset = SequenceDataset(db_path=FLAGS.db_path)
     train, val = data.random_split(
@@ -68,6 +68,15 @@ def main(argv):
         (len(dataset) - FLAGS.val_size, FLAGS.val_size),
         generator=torch.Generator().manual_seed(42),
     )
+
+    logging.info("quantizer number retrieval")
+    with gin.unlock_config():
+        gin.parse_config(
+            f"NUM_QUANTIZERS={train[0]['decoder_inputs'].shape[-1]}")
+
+    logging.info("building model")
+    model = Prior()
+
     train_loader = data.DataLoader(
         train,
         batch_size=FLAGS.batch_size,
@@ -88,6 +97,13 @@ def main(argv):
               "w") as config_out:
         config_out.write(gin.config_str())
 
+    val_check = {}
+    if len(train_loader) >= FLAGS.val_every:
+        val_check["val_check_interval"] = FLAGS.val_every
+    else:
+        nepoch = FLAGS.val_every // len(train_loader)
+        val_check["check_val_every_n_epoch"] = nepoch
+
     logging.info("creating trainer")
     trainer = pl.Trainer(
         logger=pl.loggers.TensorBoardLogger('runs', name=FLAGS.name),
@@ -104,7 +120,7 @@ def main(argv):
             )
         ],
         log_every_n_steps=10,
-        val_check_interval=1000,
+        **val_check,
     )
 
     torch.backends.cudnn.benchmark = True
