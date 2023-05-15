@@ -296,8 +296,8 @@ class MultivariateEmbedding(nn.Module):
         self.proj = None
 
         if from_pretrained is not None:
+            model = torch.jit.load(from_pretrained).eval()
             if hasattr(model.encoder, "rvq"):
-                model = torch.jit.load(from_pretrained).eval()
                 embeds = []
                 for n, p in model.encoder.rvq.named_buffers():
                     if n[-14:] == "codebook.embed":
