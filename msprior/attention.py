@@ -1,3 +1,4 @@
+import logging
 import math
 from typing import Callable, Dict, Optional, Sequence, Tuple
 
@@ -291,22 +292,26 @@ class MultivariateEmbedding(nn.Module):
         super().__init__()
         self.from_pretrained = from_pretrained
 
-        if from_pretrained is not None:
-            model = torch.jit.load(from_pretrained).eval()
-            embeds = []
-            for n, p in model.encoder.rvq.named_buffers():
-                if n[-14:] == "codebook.embed":
-                    embeds.append(p)
-            embeds = torch.cat(embeds, 0)
+        self.embedder = nn.Embedding(num_quantizers * num_tokens, num_features)
+        self.proj = None
 
-            self.embedder = nn.Embedding(num_quantizers * num_tokens,
-                                         embeds.shape[-1])
-            self.embedder.weight.data.copy_(embeds)
-            self.proj = nn.Linear(embeds.shape[-1], num_features)
-        else:
-            self.embedder = nn.Embedding(num_quantizers * num_tokens,
-                                         num_features)
-            self.proj = None
+        if from_pretrained is not None:
+            if hasattr(model.encoder, "rvq"):
+                model = torch.jit.load(from_pretrained).eval()
+                embeds = []
+                for n, p in model.encoder.rvq.named_buffers():
+                    if n[-14:] == "codebook.embed":
+                        embeds.append(p)
+                embeds = torch.cat(embeds, 0)
+
+                self.embedder = nn.Embedding(num_quantizers * num_tokens,
+                                             embeds.shape[-1])
+                self.embedder.weight.data.copy_(embeds)
+                self.proj = nn.Linear(embeds.shape[-1], num_features)
+            else:
+                logging.warn(
+                    "pretrained_embedding is only compatible with discrete rave models, skiping"
+                )
 
         self.num_quantizers = num_quantizers
         self.num_tokens = num_tokens

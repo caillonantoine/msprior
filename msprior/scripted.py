@@ -76,7 +76,9 @@ class ScriptedPrior(nn_tilde.Module):
                     self.feature_vae = torch.jit.load(vae_path).eval()
                     num_inputs += self.feature_vae.latent_size
                 else:
-                    num_inputs += 163  # TODO: put that somewhere in configuration files
+                    feature_dim = gin.get_bindings(
+                        "attention.FeatureEmbedding")["in_features"]
+                    num_inputs += feature_dim
                     self.encoder_input_type = "full"
             else:
                 raise ValueError(
@@ -94,9 +96,13 @@ class ScriptedPrior(nn_tilde.Module):
         elif self.encoder_input_type == "discrete":
             input_labels.append("semantic tokens")
         elif self.encoder_input_type == "vae":
-            input_labels.extend([f"semantic latent {i}" for i in range(8)])
+            input_labels.extend([
+                f"semantic latent {i}"
+                for i in range(self.feature_vae.latent_size)
+            ])
         elif self.encoder_input_type == "full":
-            input_labels.extend([f"semantic feature {i}" for i in range(163)])
+            input_labels.extend(
+                [f"semantic feature {i}" for i in range(feature_dim)])
         else:
             raise ValueError(
                 f"Encoder input type {self.encoder_input_type} not understood."
