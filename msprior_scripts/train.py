@@ -49,9 +49,13 @@ def main(argv):
     logging.info("parsing configuration")
     configs = list(map(add_ext, FLAGS.config))
 
+    overrides = FLAGS.override
+    if FLAGS.pretrained_embedding is not None:
+        overrides.append(f"PRETRAINED_RAVE='{FLAGS.pretrained_embedding}'")
+
     gin.parse_config_files_and_bindings(
         configs,
-        [f"PRETRAINED_RAVE='{FLAGS.pretrained_embedding}'"] + FLAGS.override,
+        overrides,
     )
 
     logging.info("building model")
