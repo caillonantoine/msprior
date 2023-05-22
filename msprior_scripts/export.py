@@ -18,6 +18,7 @@ def main(argv):
         from_continuous=FLAGS.continuous,
         vae_path=FLAGS.vae_path,
     )
+    model.apply_full_reset()
     model_name = os.path.basename(os.path.normpath(FLAGS.run)) + '.ts'
     export_path = os.path.join(FLAGS.run, model_name)
     model.export_to_ts(export_path)

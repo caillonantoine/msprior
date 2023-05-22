@@ -305,6 +305,15 @@ class ScriptedPrior(nn_tilde.Module):
         return 0
 
     @torch.jit.export
+    def get_learnable_context(self) -> bool:
+        return self.learnable_context[0]
+
+    @torch.jit.export
+    def set_learnable_context(self, learnable_context: bool) -> int:
+        self.learnable_context = (learnable_context, )
+        return 0
+
+    @torch.jit.export
     def get_reset(self) -> bool:
         return self.reset[0]
 
