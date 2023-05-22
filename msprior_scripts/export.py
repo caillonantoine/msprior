@@ -10,6 +10,8 @@ torch.set_grad_enabled(False)
 
 
 def main(argv):
+    # DUE TO THE COMPUTATIONAL COMPLEXITY OF THE MODEL, RESTRICTING TO A BATCH_SIZE OF 1
+    cc.MAX_BATCH_SIZE = 1
     cc.use_cached_conv(True)
 
     model = ScriptedPrior(
