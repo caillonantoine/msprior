@@ -124,7 +124,7 @@ class ScriptedPrior(nn_tilde.Module):
 
         self.register_attribute("temperature", 1.)
         self.register_attribute("listen", initial_listen)
-        self.register_attribute("learnable_context", False)
+        self.register_attribute("learn_context", False)
         self.register_attribute("reset", False)
 
         self.register_method(
@@ -196,7 +196,7 @@ class ScriptedPrior(nn_tilde.Module):
                     self.encoder_ratio,
                 )[..., -1].permute(0, 2, 1)
 
-                if self.learnable_context[0]:
+                if self.learn_context[0]:
                     features = self.feature_vae.decode(
                         latents,
                         context=input_rave,
@@ -305,12 +305,12 @@ class ScriptedPrior(nn_tilde.Module):
         return 0
 
     @torch.jit.export
-    def get_learnable_context(self) -> bool:
-        return self.learnable_context[0]
+    def get_learn_context(self) -> bool:
+        return self.learn_context[0]
 
     @torch.jit.export
-    def set_learnable_context(self, learnable_context: bool) -> int:
-        self.learnable_context = (learnable_context, )
+    def set_learn_context(self, learn_context: bool) -> int:
+        self.learn_context = (learn_context, )
         return 0
 
     @torch.jit.export
