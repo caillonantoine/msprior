@@ -124,7 +124,8 @@ class ScriptedPrior(nn_tilde.Module):
 
         self.register_attribute("temperature", 1.)
         self.register_attribute("listen", initial_listen)
-        self.register_attribute("reset", True)
+        self.register_attribute("learnable_context", False)
+        self.register_attribute("reset", False)
 
         self.register_method(
             "forward",
@@ -146,6 +147,12 @@ class ScriptedPrior(nn_tilde.Module):
                 self.encoder_ratio * temporal_ratio,
             )
 
+    def apply_full_reset(self):
+        for n, b in self.named_buffers():
+            if "_cache_length" in n or "_relative_index" in n or "_state" in n:
+                b.zero_()
+        self.set_reset(False)
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         batch_size = x.shape[0]
         input_rave = x[:, :self.num_rave_quantizers]
@@ -161,10 +168,7 @@ class ScriptedPrior(nn_tilde.Module):
         input_rave = input_rave.permute(0, 2, 1)
 
         if self.reset[0]:
-            for n, b in self.named_buffers():
-                if "_cache_length" in n or "_relative_index" in n or "_state" in n:
-                    b.zero_()
-            self.set_reset(False)
+            self.apply_full_reset()
 
         if self.has_encoder:
             assert hasattr(self, "encoder_ratio")
@@ -190,9 +194,18 @@ class ScriptedPrior(nn_tilde.Module):
                     latents.shape[1],
                     -1,
                     self.encoder_ratio,
-                )[..., -1]
-                features = self.feature_vae(latents).permute(0, 2, 1)
+                )[..., -1].permute(0, 2, 1)
+
+                if self.learnable_context[0]:
+                    features = self.feature_vae.decode(
+                        latents,
+                        context=input_rave,
+                    )
+                else:
+                    features = self.feature_vae.decode(latents)
+
                 encoder_out = self.encoder(features)
+
             elif self.encoder_input_type == "full":
                 features = x[:, self.num_rave_quantizers:]
                 features = features.reshape(
