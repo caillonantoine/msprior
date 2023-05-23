@@ -1,0 +1,30 @@
+include "decoder_only.gin"
+
+from __gin__ import dynamic_registration
+from msprior import attention
+from msprior import rwkv
+
+NUM_LAYERS = 12
+
+attention.Decoder:
+    layer_factory = @rwkv.RWKV
+    num_layers = 1
+
+rwkv.RWKV:
+    block = @rwkv.Block
+    num_layers = %NUM_LAYERS
+    dim = %MODEL_DIM
+
+rwkv.Block:
+    dim = %MODEL_DIM
+    time_mixer = @rwkv.TimeMixer
+    channel_mixer = @rwkv.ChannelMixer
+
+rwkv.TimeMixer:
+    ctx_len = %SEQ_LEN
+    dim = %MODEL_DIM
+    num_layers = %NUM_LAYERS
+
+rwkv.ChannelMixer:
+    num_layers = %NUM_LAYERS
+    dim = %MODEL_DIM
