@@ -2,6 +2,7 @@ from random import randint
 from typing import Dict
 
 import torch
+import numpy as np
 
 TensorDict = Dict[str, torch.Tensor]
 
@@ -74,7 +75,7 @@ def conditioned_rwkv(inputs: TensorDict, seq_len: int, main_key: str,
             f"time ratio between main and condition should be >= 1, got {ratio}"
         )
 
-    condition_seq = condition_seq.repeat_interleave(ratio, 0)
+    condition_seq = np.repeat(condition_seq, ratio, axis=0)
 
     start = randint(0, main_seq.shape[0] - seq_len - 1)
     end = start + seq_len

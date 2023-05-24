@@ -342,7 +342,7 @@ class RWKV(nn.Module):
                         y.chunk(y.shape[1], 1),
                 ):
                     _x = self.norm(_x)
-                    for block in zip(self.blocks, self.films):
+                    for block, film in zip(self.blocks, self.films):
                         _x = block(_x)
                         _x = film(_x, _y)
                     out.append(_x)

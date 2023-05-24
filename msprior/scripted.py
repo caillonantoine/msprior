@@ -68,8 +68,13 @@ class ScriptedPrior(nn_tilde.Module):
         self.from_continuous = from_continuous
 
         if self.has_encoder:
-            encoder_embedder = gin.get_bindings(
-                "attention.Encoder")["embedder"]
+            encoder_ratio = 1
+            try:
+                encoder_embedder = gin.get_bindings(
+                    "attention.Encoder")["embedder"]
+            except ValueError:
+                encoder_embedder = gin.get_bindings("attention.Prior")["encoder_factory"]
+
             if isinstance(encoder_embedder(), Embedding):
                 num_inputs += 1
                 self.encoder_num_tokens = gin.get_bindings(
@@ -89,8 +94,13 @@ class ScriptedPrior(nn_tilde.Module):
                 raise ValueError(
                     f"Unknown encoder embedder {encoder_embedder}")
 
-            self.encoder_ratio = gin.get_bindings(
-                "decoder/attention.TransformerLayer")["encoder_out_ratio"]
+            try:
+                encoder_ratio = gin.get_bindings(
+                    "decoder/attention.TransformerLayer")["encoder_out_ratio"]
+            except KeyError:
+                pass
+
+            self.encoder_ratio = encoder_ratio
 
         input_labels = [
             f"rave latent {i+1}" for i in range(self.num_rave_quantizers)

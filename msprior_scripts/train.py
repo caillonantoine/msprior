@@ -116,7 +116,7 @@ def main(argv):
             callbacks.ModelCheckpoint(filename='last'),
             callbacks.EarlyStopping(
                 "val_cross_entropy",
-                patience=10,
+                patience=20,
             )
         ],
         log_every_n_steps=10,

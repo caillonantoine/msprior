@@ -16,11 +16,15 @@ rwkv.RWKV:
     film = @rwkv.Film
 
 rwkv.Film:
-    in_dim = %NUM_SEMANTIC_FEATURES
+    in_dim = %MODEL_DIM
     feature_dim = %MODEL_DIM
 
 attention.Prior:
-    encoder_factory = @nn.Identity
+    encoder_factory = @attention.FeatureEmbedding
+
+attention.FeatureEmbedding:
+    in_features = %NUM_SEMANTIC_FEATURES
+    out_features = %MODEL_DIM
 
 dataset.SequenceDataset:
     task_fn = @task.conditioned_rwkv
