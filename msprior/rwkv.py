@@ -11,19 +11,7 @@ from torch.utils.cpp_extension import load
 
 T_MAX = 256
 
-wkv_cuda = load(
-    name=f"wkv_{T_MAX}",
-    sources=[
-        os.path.join(os.path.dirname(__file__), "cuda/wkv_op.cpp"),
-        os.path.join(os.path.dirname(__file__), "cuda/wkv_cuda.cu"),
-    ],
-    verbose=False,
-    extra_cuda_cflags=[
-        "-t 4", "-std=c++17", "-res-usage", "--maxrregcount 60",
-        "--use_fast_math", "-O3", "-Xptxas -O3",
-        "--extra-device-vectorization", f"-DTmax={T_MAX}"
-    ],
-)
+wkv_cuda = None
 
 
 class WKV(torch.autograd.Function):
@@ -65,6 +53,20 @@ class WKV(torch.autograd.Function):
 
 
 def WKV_Attention(B, T, C, w, u, k, v):
+    if wkv_cuda is None:
+        wkv_cuda = load(
+            name=f"wkv_{T_MAX}",
+            sources=[
+                os.path.join(os.path.dirname(__file__), "cuda/wkv_op.cpp"),
+                os.path.join(os.path.dirname(__file__), "cuda/wkv_cuda.cu"),
+            ],
+            verbose=False,
+            extra_cuda_cflags=[
+                "-t 4", "-std=c++17", "-res-usage", "--maxrregcount 60",
+                "--use_fast_math", "-O3", "-Xptxas -O3",
+                "--extra-device-vectorization", f"-DTmax={T_MAX}"
+            ],
+        )
     return WKV.apply(B, T, C, w, u, k, v)
 
 
@@ -307,8 +309,16 @@ class RWKV(nn.Module):
     def forward(self,
                 x: torch.Tensor,
                 y: Optional[torch.Tensor] = None) -> torch.Tensor:
-        x = self.norm(x)
-        x = self.blocks(x)
+        if cc.USE_BUFFER_CONV and x.shape[1] != 1:
+            out = []
+            for _x in x.chunk(x.shape[1], 1):
+                _x = self.norm(_x)
+                _x = self.blocks(_x)
+                out.append(_x)
+            x = torch.cat(out, 1)
+        else:
+            x = self.norm(x)
+            x = self.blocks(x)
         return x
 
 

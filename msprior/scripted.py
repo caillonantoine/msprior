@@ -9,6 +9,7 @@ import nn_tilde
 import torch
 
 from .attention import Embedding, FeatureEmbedding, Prior
+from .rwkv import RWKV
 
 
 class ScriptedPrior(nn_tilde.Module):
@@ -40,7 +41,11 @@ class ScriptedPrior(nn_tilde.Module):
             ckpts = sorted(ckpts, key=lambda x: "last" in x, reverse=True)
             ckpt = next(iter(ckpts))
             ckpt = torch.load(ckpt, map_location="cpu")["state_dict"]
-            model.load_state_dict(ckpt)
+            if isinstance(model.decoder.net[0], RWKV):
+                for k, v in ckpt.items():
+                    if ".time" in k:
+                        ckpt[k] = v.reshape(-1)
+            model.load_state_dict(ckpt, strict=False)
 
         model.eval()
 
@@ -149,7 +154,7 @@ class ScriptedPrior(nn_tilde.Module):
 
     def apply_full_reset(self):
         for n, b in self.named_buffers():
-            if "_cache_length" in n or "_relative_index" in n or "_state" in n:
+            if "_cache_length" in n or "_relative_index" in n or "_state" in n or "last_" in n:
                 b.zero_()
         self.set_reset(False)
 
