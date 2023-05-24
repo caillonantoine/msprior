@@ -8,6 +8,7 @@ import cached_conv as cc
 import torch
 import torch.nn as nn
 from torch.utils.cpp_extension import load
+import logging
 
 T_MAX = 256
 
@@ -53,7 +54,9 @@ class WKV(torch.autograd.Function):
 
 
 def WKV_Attention(B, T, C, w, u, k, v):
+    global wkv_cuda
     if wkv_cuda is None:
+        logging.info("Building custom CUDA kernels")
         wkv_cuda = load(
             name=f"wkv_{T_MAX}",
             sources=[
@@ -298,27 +301,68 @@ class Block(nn.Module):
         return x
 
 
+class Film(nn.Module):
+
+    def __init__(self, in_dim: int, feature_dim: int) -> None:
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(in_dim, feature_dim),
+            nn.SiLU(),
+            nn.Linear(feature_dim, 2 * feature_dim),
+        )
+
+    def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        mean, scale = self.net(y).chunk(2, -1)
+        return x * scale + mean
+
+
 class RWKV(nn.Module):
 
-    def __init__(self, block: Callable[[int], Block], num_layers: int,
-                 dim: int) -> None:
+    def __init__(self,
+                 block: Callable[[int], Block],
+                 num_layers: int,
+                 dim: int,
+                 film: Optional[Callable[[], Film]] = None) -> None:
         super().__init__()
         self.norm = nn.LayerNorm(dim)
-        self.blocks = nn.Sequential(*[block(i) for i in range(num_layers)])
+        self.blocks = nn.ModuleList([block(i) for i in range(num_layers)])
+        self.films = None
+        if film is not None:
+            self.films = nn.ModuleList([film() for _ in range(num_layers)])
 
     def forward(self,
                 x: torch.Tensor,
                 y: Optional[torch.Tensor] = None) -> torch.Tensor:
         if cc.USE_BUFFER_CONV and x.shape[1] != 1:
             out = []
-            for _x in x.chunk(x.shape[1], 1):
-                _x = self.norm(_x)
-                _x = self.blocks(_x)
-                out.append(_x)
+            if self.films is not None:
+                assert y is not None
+                for _x, _y in zip(
+                        x.chunk(x.shape[1], 1),
+                        y.chunk(y.shape[1], 1),
+                ):
+                    _x = self.norm(_x)
+                    for block in zip(self.blocks, self.films):
+                        _x = block(_x)
+                        _x = film(_x, _y)
+                    out.append(_x)
+            else:
+                for _x in x.chunk(x.shape[1], 1):
+                    _x = self.norm(_x)
+                    for block in self.blocks:
+                        _x = block(_x)
+                    out.append(_x)
             x = torch.cat(out, 1)
         else:
             x = self.norm(x)
-            x = self.blocks(x)
+            if self.films is not None:
+                assert y is not None
+                for block, film in zip(self.blocks, self.films):
+                    x = block(x)
+                    x = film(x, y)
+            else:
+                for block in self.blocks:
+                    x = block(x)
         return x
 
 

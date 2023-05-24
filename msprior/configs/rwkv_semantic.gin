@@ -1,0 +1,31 @@
+include "rwkv.gin"
+
+from __gin__ import dynamic_registration
+
+from torch import nn
+
+from msprior import task
+from msprior import rwkv
+from msprior import dataset
+from msprior import task
+from msprior import attention
+
+NUM_SEMANTIC_FEATURES = 163
+
+rwkv.RWKV:
+    film = @rwkv.Film
+
+rwkv.Film:
+    in_dim = %NUM_SEMANTIC_FEATURES
+    feature_dim = %MODEL_DIM
+
+attention.Prior:
+    encoder_factory = @nn.Identity
+
+dataset.SequenceDataset:
+    task_fn = @task.conditioned_rwkv
+
+task.conditioned_rwkv:
+    seq_len = %SEQ_LEN
+    main_key = "rave"
+    condition_key = "semantic_features"

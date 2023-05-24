@@ -1,5 +1,5 @@
 from random import randint
-from typing import Dict, Tuple
+from typing import Dict
 
 import torch
 
@@ -60,4 +60,27 @@ def encoder_decoder_semantic_features(inputs: TensorDict, seq_len: int,
         "encoder_inputs": semantic_features,
         "decoder_inputs": input_tokens,
         "decoder_targets": target_tokens,
+    }
+
+
+def conditioned_rwkv(inputs: TensorDict, seq_len: int, main_key: str,
+                     condition_key: str) -> TensorDict:
+    main_seq = inputs[main_key]
+    condition_seq = inputs[condition_key]
+    ratio = main_seq.shape[0] // condition_seq.shape[0]
+
+    if ratio < 1:
+        raise ValueError(
+            f"time ratio between main and condition should be >= 1, got {ratio}"
+        )
+
+    condition_seq = condition_seq.repeat_interleave(ratio, 0)
+
+    start = randint(0, main_seq.shape[0] - seq_len - 1)
+    end = start + seq_len
+
+    return {
+        "encoder_inputs": condition_seq[start + 1:end + 1],
+        "decoder_inputs": main_seq[start:end],
+        "decoder_targets": main_seq[start + 1:end + 1],
     }
