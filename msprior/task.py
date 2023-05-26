@@ -1,8 +1,8 @@
 from random import randint
 from typing import Dict
 
-import torch
 import numpy as np
+import torch
 
 TensorDict = Dict[str, torch.Tensor]
 

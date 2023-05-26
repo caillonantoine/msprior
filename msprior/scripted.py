@@ -73,7 +73,8 @@ class ScriptedPrior(nn_tilde.Module):
                 encoder_embedder = gin.get_bindings(
                     "attention.Encoder")["embedder"]
             except ValueError:
-                encoder_embedder = gin.get_bindings("attention.Prior")["encoder_factory"]
+                encoder_embedder = gin.get_bindings(
+                    "attention.Prior")["encoder_factory"]
 
             if isinstance(encoder_embedder(), Embedding):
                 num_inputs += 1

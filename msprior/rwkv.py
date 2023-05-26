@@ -1,5 +1,6 @@
 # Adapted from https://github.com/BlinkDL/RWKV-LM
 
+import logging
 import math
 import os
 from typing import Callable, Optional
@@ -8,7 +9,6 @@ import cached_conv as cc
 import torch
 import torch.nn as nn
 from torch.utils.cpp_extension import load
-import logging
 
 T_MAX = 256
 

@@ -348,7 +348,10 @@ class FeatureEmbedding(nn.Module):
     def __init__(self, in_features: int, out_features: int) -> None:
         super().__init__()
         self.norm = nn.BatchNorm1d(in_features)
-        self.net = nn.Linear(in_features, out_features)
+        self.net = nn.Sequential(
+            nn.Linear(in_features, out_features),
+            nn.LayerNorm(out_features),
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.norm(x.permute(0, 2, 1))
