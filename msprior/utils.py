@@ -13,6 +13,8 @@ import torch.nn as nn
 
 # GIN UTILS
 
+TensorDict = Dict[str, torch.Tensor]
+
 
 def get_feed_forward_size(model_dim):
     return 4 * model_dim
@@ -246,3 +248,41 @@ def sample_from_logits(logits: torch.Tensor,
 
     samples = torch.argmax(logits, -1)
     return samples
+
+
+# CONTINUOUS FEATURE RECONSTRUCTION
+
+
+def semantic_vae_processing(
+        vae_path: Optional[str] = None
+) -> Callable[[torch.Tensor], torch.Tensor]:
+
+    if vae_path is None:
+        return lambda x: x
+
+    vae = torch.jit.load(vae_path).eval()
+    state = list(
+        map(lambda nv: nv[1],
+            filter(
+                lambda nv: "_state" in nv[0],
+                vae.named_buffers(),
+            )))
+
+    def reset():
+        for elm in state:
+            elm.zero_()
+
+    @torch.no_grad()
+    def vae_processing(inputs: TensorDict) -> TensorDict:
+        reset()
+        vae.to(inputs["encoder_inputs"].device)
+        reconstruction = vae.forward(
+            inputs["encoder_inputs"],
+            context=inputs["decoder_inputs"],
+        )
+
+        inputs["encoder_inputs"] = reconstruction
+
+        return inputs
+
+    return vae_processing

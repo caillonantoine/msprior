@@ -526,6 +526,8 @@ class Prior(pl.LightningModule):
         self,
         decoder_factory: Callable[[], Decoder],
         encoder_factory: Optional[Callable[[], Encoder]] = None,
+        inputs_preprocessing: Optional[Callable[[TensorDict],
+                                                TensorDict]] = None,
     ) -> None:
         super().__init__()
 
@@ -533,6 +535,8 @@ class Prior(pl.LightningModule):
         if encoder_factory is not None:
             self.encoder = encoder_factory()
         self.decoder = decoder_factory()
+
+        self.inputs_preprocessing = inputs_preprocessing
 
     def forward(
         self,
@@ -562,6 +566,9 @@ class Prior(pl.LightningModule):
         )
 
     def loss(self, inputs: TensorDict) -> torch.Tensor:
+        if self.inputs_preprocessing is not None:
+            inputs = self.inputs_preprocessing(inputs)
+
         logits = self.forward(
             inputs["decoder_inputs"],
             inputs["encoder_inputs"],

@@ -9,8 +9,11 @@ from msprior import rwkv
 from msprior import dataset
 from msprior import task
 from msprior import attention
+from msprior import utils
 
 NUM_SEMANTIC_FEATURES = 163
+VAE_PATH = None
+
 
 rwkv.RWKV:
     film = @rwkv.Film
@@ -21,10 +24,14 @@ rwkv.Film:
 
 attention.Prior:
     encoder_factory = @attention.FeatureEmbedding
+    inputs_preprocessing = @utils.semantic_vae_processing()
 
 attention.FeatureEmbedding:
     in_features = %NUM_SEMANTIC_FEATURES
     out_features = %MODEL_DIM
+
+utils.semantic_vae_processing:
+    vae_path = %VAE_PATH
 
 dataset.SequenceDataset:
     task_fn = @task.conditioned_rwkv
