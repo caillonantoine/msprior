@@ -16,5 +16,5 @@ tmp/
 *.egg-info/*
 *__version__.py
 *ipynb_checkpoints*
-xp
+xp.*
 dist/

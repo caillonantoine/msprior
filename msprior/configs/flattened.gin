@@ -1,0 +1,27 @@
+include "decoder_only.gin"
+
+from __gin__ import dynamic_registration
+
+from msprior import attention
+from msprior import dataset
+from msprior import task
+
+attention.Decoder:
+    embedder = @attention.Embedding
+    predictor = @attention.LogitsProjection
+
+attention.Embedding:
+    num_embeddings = 16384
+    embedding_dim = %MODEL_DIM
+
+attention.LogitsProjection:
+    dim = %MODEL_DIM
+    num_tokens = 16384
+
+dataset.SequenceDataset:
+    task_fn = @task.decoder_only_rave
+
+task.decoder_only_rave_flattened:
+    seq_len = %SEQ_LEN
+    decoder_key = "rave"
+    num_tokens = 1024

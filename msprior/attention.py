@@ -335,12 +335,23 @@ class MultivariateEmbedding(nn.Module):
 
 class Embedding(nn.Embedding):
 
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
+    def forward(self,
+                input: torch.Tensor,
+                sum_over_quantizers: Optional[bool] = None) -> torch.Tensor:
         input = input.long()
 
         return nn.functional.embedding(input, self.weight, self.padding_idx,
                                        self.max_norm, self.norm_type,
                                        self.scale_grad_by_freq, self.sparse)
+
+
+class LogitsProjection(nn.Module):
+
+    def __init__(self, dim: int, num_tokens: int, **kwargs) -> None:
+        self.net = nn.Sequential(nn.GELU(), nn.Linear(dim, num_tokens))
+
+    def forward(self, inputs: torch.Tensor, *args, **kwargs) -> torch.Tensor:
+        return self.net(inputs)
 
 
 class FeatureEmbedding(nn.Module):

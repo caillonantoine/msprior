@@ -22,6 +22,28 @@ def decoder_only_rave(inputs: TensorDict, seq_len: int,
     }
 
 
+def decoder_only_rave_flattened(inputs: TensorDict, seq_len: int,
+                                decoder_key: str,
+                                num_tokens: int) -> TensorDict:
+    num_q = inputs[decoder_key].shape[-1]
+
+    inputs = inputs[decoder_key] + np.arange(num_q) * num_tokens
+    inputs = inputs.rehspae(-1)
+    start = randint(0, inputs.shape[0] - seq_len - 1)
+    if start % num_q:
+        start -= start % num_q
+    end = start + seq_len
+
+    input_tokens = inputs[start:end].copy()
+    target_tokens = inputs[start + 1:end + 1].copy()
+
+    return {
+        "encoder_inputs": torch.Tensor([]),
+        "decoder_inputs": input_tokens,
+        "decoder_targets": target_tokens,
+    }
+
+
 def encoder_decoder_semantic_token(inputs: TensorDict, seq_len: int,
                                    encoder_key: str,
                                    decoder_key: str) -> TensorDict:
