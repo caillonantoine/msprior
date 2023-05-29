@@ -231,14 +231,6 @@ def compose(functions: Sequence[Callable[[Dict[str, torch.Tensor]], None]]):
 
 # OTHERS
 
-# def sample_from_logits(logits: torch.Tensor,
-#                        temperature: float = 0.) -> torch.Tensor:
-#     assert temperature >= 0
-#     dist = torch.softmax(logits / (temperature + 1e-15), -1)
-#     dist = dist.reshape(-1, dist.shape[-1])
-#     samples = torch.multinomial(dist, 1).reshape_as(logits[..., 0])
-#     return samples
-
 
 def sample_from_logits(logits: torch.Tensor,
                        temperature: float = 0.) -> torch.Tensor:
