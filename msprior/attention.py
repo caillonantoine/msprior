@@ -348,6 +348,7 @@ class Embedding(nn.Embedding):
 class LogitsProjection(nn.Module):
 
     def __init__(self, dim: int, num_tokens: int, **kwargs) -> None:
+        super().__init__()
         self.net = nn.Sequential(nn.GELU(), nn.Linear(dim, num_tokens))
 
     def forward(self, inputs: torch.Tensor, *args, **kwargs) -> torch.Tensor:

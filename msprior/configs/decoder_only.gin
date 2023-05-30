@@ -74,3 +74,4 @@ dataset.SequenceDataset:
 task.decoder_only_rave:
     seq_len = %SEQ_LEN
     decoder_key = "rave"
+    quantizer_crop = %NUM_QUANTIZERS

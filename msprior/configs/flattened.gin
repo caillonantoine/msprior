@@ -6,6 +6,8 @@ from msprior import attention
 from msprior import dataset
 from msprior import task
 
+SEQ_LEN = 1024
+
 attention.Decoder:
     embedder = @attention.Embedding
     predictor = @attention.LogitsProjection
@@ -19,9 +21,10 @@ attention.LogitsProjection:
     num_tokens = 16384
 
 dataset.SequenceDataset:
-    task_fn = @task.decoder_only_rave
+    task_fn = @task.decoder_only_rave_flattened
 
 task.decoder_only_rave_flattened:
     seq_len = %SEQ_LEN
     decoder_key = "rave"
     num_tokens = 1024
+    quantizer_crop = 4
