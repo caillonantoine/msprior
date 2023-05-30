@@ -379,7 +379,8 @@ class IndividualPredictor(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
         if not first_quantizer:
-            self.film = nn.Linear(dim, 2 * dim)
+            self.film = nn.Sequential(nn.Linear(dim, dim), nn.GELU(),
+                                      nn.Linear(dim, 2 * dim))
         else:
             self.film = None
 

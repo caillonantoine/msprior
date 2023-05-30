@@ -11,7 +11,6 @@ from torch.utils import data
 from msprior.attention import Prior
 from msprior.dataset import SequenceDataset
 
-
 FLAGS = flags.FLAGS
 flags.DEFINE_multi_string("config",
                           default="msprior/configs/decoder_only.gin",
