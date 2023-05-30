@@ -11,6 +11,7 @@ from torch.utils import data
 from msprior.attention import Prior
 from msprior.dataset import SequenceDataset
 
+
 FLAGS = flags.FLAGS
 flags.DEFINE_multi_string("config",
                           default="msprior/configs/decoder_only.gin",
@@ -68,11 +69,11 @@ def main(argv):
         (len(dataset) - FLAGS.val_size, FLAGS.val_size),
         generator=torch.Generator().manual_seed(42),
     )
-
-    logging.info("quantizer number retrieval")
-    with gin.unlock_config():
-        gin.parse_config(
-            f"NUM_QUANTIZERS={train[0]['decoder_inputs'].shape[-1]}")
+    if not any(map(lambda x: "flattened" in x, FLAGS.config)):
+        logging.info("quantizer number retrieval")
+        with gin.unlock_config():
+            gin.parse_config(
+                f"NUM_QUANTIZERS={train[0]['decoder_inputs'].shape[-1]}")
 
     logging.info("building model")
     model = Prior()
