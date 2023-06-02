@@ -10,8 +10,7 @@ torch.set_grad_enabled(False)
 
 
 def main(argv):
-    # DUE TO THE COMPUTATIONAL COMPLEXITY OF THE MODEL, RESTRICTING TO A BATCH_SIZE OF 1
-    cc.MAX_BATCH_SIZE = 1
+    cc.MAX_BATCH_SIZE = FLAGS.batch_size
     cc.use_cached_conv(True)
 
     model = ScriptedPrior(
@@ -30,6 +29,7 @@ def main(argv):
 FLAGS = flags.FLAGS
 flags.DEFINE_string('run', default=None, required=True, help='Run to export')
 flags.DEFINE_string('vae_path', default=None, help='Pretrained semantic VAE')
+flags.DEFINE_integer('batch_size', default=1, help='Maximum batch size')
 flags.DEFINE_integer(
     'temporal_ratio',
     default=1024,
