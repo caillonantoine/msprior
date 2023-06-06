@@ -93,3 +93,9 @@ Once exported, you can load the model inside MaxMSP following the image below.
 ![Max Msp usage](docs/maxmsp_usage.png)
 
 Note that additional inputs (e.g. semantic) are only available when using seq2seq models. The last output yields the perplexity of the model.
+
+## Funding
+
+This work is funded by the DAFNE+ N° 101061548 project, and is led at IRCAM in the STMS lab.
+
+<img src="https://ec.europa.eu/regional_policy/images/information-sources/logo-download-center/eu_co_funded_en.jpg" width=200px/>
