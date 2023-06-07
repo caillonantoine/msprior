@@ -92,7 +92,7 @@ def main(argv):
         num_workers=FLAGS.workers,
     )
 
-    os.makedirs(os.path.join("runs", FLAGS.name), exist_ok=False)
+    os.makedirs(os.path.join("runs", FLAGS.name), exist_ok=True)
     with open(os.path.join("runs", FLAGS.name, "config.gin"),
               "w") as config_out:
         config_out.write(gin.config_str())
