@@ -13,7 +13,7 @@ from msprior.dataset import SequenceDataset
 
 FLAGS = flags.FLAGS
 flags.DEFINE_multi_string("config",
-                          default="msprior/configs/decoder_only.gin",
+                          default="decoder_only",
                           help="config to parse.")
 flags.DEFINE_string("db_path",
                     default=None,
