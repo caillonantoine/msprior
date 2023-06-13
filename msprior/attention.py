@@ -304,6 +304,7 @@ class ModulatedTransformerLayer(nn.Module):
 
         self.film_norm = nn.LayerNorm(model_dim)
         self.film = film()
+        self.film_dropout = nn.Dropout(dropout_rate)
 
     def forward(self,
                 x: torch.Tensor,
@@ -333,6 +334,7 @@ class ModulatedTransformerLayer(nn.Module):
         x_res = x.clone()
         x = self.film_norm(x)
         x = self.film(x, y)
+        x = self.film_dropout(x)
         x = x + x_res
 
         return x
