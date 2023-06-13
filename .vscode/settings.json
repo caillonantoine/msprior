@@ -1,10 +1,8 @@
 {
-    "python.formatting.provider": "yapf",
-    "editor.formatOnSave": false,
-    "python.testing.pytestArgs": [
-        "."
-    ],
-    "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true,
-    "python.analysis.typeCheckingMode": "off",
+  "python.formatting.provider": "yapf",
+  "editor.formatOnSave": true,
+  "python.testing.pytestArgs": ["."],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "python.analysis.typeCheckingMode": "off"
 }

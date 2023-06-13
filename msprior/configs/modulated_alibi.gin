@@ -1,0 +1,50 @@
+include "decoder_only.gin"
+
+from __gin__ import dynamic_registration
+
+from torch import nn
+
+from msprior import rwkv
+from msprior import dataset
+from msprior import task
+from msprior import attention
+from msprior import utils
+
+NUM_SEMANTIC_FEATURES = 128
+VAE_PATH = None
+
+rwkv.Film:
+    in_dim = %MODEL_DIM
+    feature_dim = %MODEL_DIM
+
+attention.Decoder:
+    layer_factory = @attention.ModulatedTransformerLayer
+
+attention.ModulatedTransformerLayer:
+    attention_factory = @attention.MultiHeadAlibiAttention
+    feed_forward_factory = @attention.FeedForward
+    dropout_rate = %DROPOUT_RATE
+    model_dim = %MODEL_DIM
+    head_dim = %HEAD_DIM
+    num_heads = %NUM_HEADS
+    film = @rwkv.Film
+
+
+attention.Prior:
+    encoder_factory = @attention.FeatureEmbedding
+    inputs_preprocessing = @utils.semantic_vae_processing()
+
+attention.FeatureEmbedding:
+    in_features = %NUM_SEMANTIC_FEATURES
+    out_features = %MODEL_DIM
+
+utils.semantic_vae_processing:
+    vae_path = %VAE_PATH
+
+dataset.SequenceDataset:
+    task_fn = @task.conditioned_rwkv
+
+task.conditioned_rwkv:
+    seq_len = %SEQ_LEN
+    main_key = "rave"
+    condition_key = "semantic_features"

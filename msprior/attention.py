@@ -7,9 +7,9 @@ import gin
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
-
 import msprior
 from msprior import utils
+from msprior import rwkv
 
 TensorDict = Dict[str, torch.Tensor]
 
@@ -278,6 +278,62 @@ class TransformerLayer(nn.Module):
         x = self.feed_forward_dropout(x)
         x = x + x_res
         x = self.feed_forward_norm(x)
+
+        return x
+
+
+class ModulatedTransformerLayer(nn.Module):
+
+    def __init__(self, attention_factory: Callable[[],
+                                                   MultiHeadAlibiAttention],
+                 feed_forward_factory: Callable[[], FeedForward],
+                 dropout_rate: float, model_dim: int, head_dim: int,
+                 num_heads: int, film: Callable[[], rwkv.Film]) -> None:
+        super().__init__()
+
+        self.attention_norm = nn.LayerNorm(model_dim)
+        self.q_linear = nn.Linear(model_dim, head_dim * num_heads)
+        self.kv_linear = nn.Linear(model_dim, 2 * head_dim * num_heads)
+        self.attention = attention_factory()
+        self.post_attention_linear = nn.Linear(head_dim * num_heads, model_dim)
+        self.attention_dropout = nn.Dropout(dropout_rate)
+
+        self.feed_forward_norm = nn.LayerNorm(model_dim)
+        self.feed_forward = feed_forward_factory()
+        self.feed_forward_dropout = nn.Dropout(dropout_rate)
+
+        self.film_norm = nn.LayerNorm(model_dim)
+        self.film = film()
+
+    def forward(self,
+                x: torch.Tensor,
+                y: Optional[torch.Tensor] = None) -> torch.Tensor:
+
+        assert y is not None
+
+        # SELF ATTENTION
+        x_res = x.clone()
+        x = self.attention_norm(x)
+        q = self.q_linear(x)
+        k, v = self.kv_linear(x).chunk(2, -1)
+        x = self.attention(q, k, v)
+        x = self.post_attention_linear(x)
+        x = self.attention_dropout(x)
+        x = x + x_res
+
+        # FEED FORWARD
+        x_res = x.clone()
+        x = self.feed_forward_norm(x)
+        x = self.feed_forward(x)
+        x = self.feed_forward_dropout(x)
+        x = x + x_res
+
+        # MODULATION
+
+        x_res = x.clone()
+        x = self.film_norm(x)
+        x = self.film(x, y)
+        x = x + x_res
 
         return x
 
