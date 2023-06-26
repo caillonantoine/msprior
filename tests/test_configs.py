@@ -12,8 +12,8 @@ from msprior.scripted import ScriptedPrior
 torch.set_grad_enabled(False)
 
 configs = map(str, pathlib.Path("msprior/configs").glob("*.gin"))
-configs = filter(lambda x:"flattened" not in x, configs)
-configs = filter(lambda x:"rwkv" not in x, configs)
+configs = filter(lambda x: "flattened" not in x, configs)
+configs = filter(lambda x: "rwkv" not in x, configs)
 configs = list(configs)
 
 names = map(os.path.basename, configs)

@@ -5,9 +5,9 @@ import gin
 import pytorch_lightning as pl
 import torch
 from absl import app, flags
-from pytorch_lightning import callbacks
 from torch.utils import data
 
+import msprior.utils
 from msprior.attention import Prior
 from msprior.dataset import SequenceDataset
 
@@ -37,6 +37,9 @@ flags.DEFINE_multi_string("override",
 flags.DEFINE_string("ckpt",
                     default=None,
                     help="checkpoint to resume training from.")
+flags.DEFINE_float('ema',
+                   default=None,
+                   help='Exponential weight averaging factor (optional)')
 flags.DEFINE_integer("val_every",
                      default=1000,
                      help="validate training every n step.")
@@ -63,6 +66,12 @@ def main(argv):
 
     logging.info("loading dataset")
     dataset = SequenceDataset(db_path=FLAGS.db_path)
+
+    if FLAGS.val_size > len(dataset):
+        logging.warn(
+            r"Dataset too small, using 5% of the train set as the val set")
+        FLAGS.val_size = len(dataset) // 20
+
     train, val = data.random_split(
         dataset,
         (len(dataset) - FLAGS.val_size, FLAGS.val_size),
@@ -104,21 +113,26 @@ def main(argv):
         nepoch = FLAGS.val_every // len(train_loader)
         val_check["check_val_every_n_epoch"] = nepoch
 
+    callbacks = [
+        pl.callbacks.LearningRateMonitor(logging_interval='step'),
+        pl.callbacks.ModelCheckpoint(monitor="val_cross_entropy",
+                                     filename='best'),
+        pl.callbacks.ModelCheckpoint(filename='last'),
+        pl.callbacks.EarlyStopping(
+            "val_cross_entropy",
+            patience=20,
+        )
+    ]
+
+    if FLAGS.ema is not None:
+        callbacks.append(msprior.utils.EMA(FLAGS.ema))
+
     logging.info("creating trainer")
     trainer = pl.Trainer(
         logger=pl.loggers.TensorBoardLogger('runs', name=FLAGS.name),
         accelerator='gpu',
         devices=[FLAGS.gpu],
-        callbacks=[
-            callbacks.LearningRateMonitor(logging_interval='step'),
-            callbacks.ModelCheckpoint(monitor="val_cross_entropy",
-                                      filename='best'),
-            callbacks.ModelCheckpoint(filename='last'),
-            callbacks.EarlyStopping(
-                "val_cross_entropy",
-                patience=20,
-            )
-        ],
+        callbacks=callbacks,
         log_every_n_steps=10,
         **val_check,
     )

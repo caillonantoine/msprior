@@ -7,9 +7,9 @@ import gin
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
+
 import msprior
-from msprior import utils
-from msprior import rwkv
+from msprior import rwkv, utils
 
 TensorDict = Dict[str, torch.Tensor]
 

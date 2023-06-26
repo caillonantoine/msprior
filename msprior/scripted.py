@@ -21,6 +21,7 @@ class ScriptedPrior(nn_tilde.Module):
         from_continuous: bool = False,
         vae_path: Optional[str] = None,
         initial_listen: bool = True,
+        ema_weights: bool = False,
     ) -> None:
         super().__init__()
         print("streaming mode is set to", cc.USE_BUFFER_CONV)
@@ -40,7 +41,11 @@ class ScriptedPrior(nn_tilde.Module):
             ckpts = map(str, ckpts)
             ckpts = sorted(ckpts, key=lambda x: "last" in x, reverse=True)
             ckpt = next(iter(ckpts))
-            ckpt = torch.load(ckpt, map_location="cpu")["state_dict"]
+            ckpt = torch.load(ckpt, map_location="cpu")
+            if ema_weights and "EMA" in ckpt["callbacks"]:
+                ckpt = ckpt["callbacks"]["EMA"],
+            else:
+                ckpt = ckpt["state_dict"]
             if isinstance(model.decoder.net[0], RWKV):
                 for k, v in ckpt.items():
                     if ".time" in k:

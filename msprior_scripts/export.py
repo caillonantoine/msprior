@@ -18,6 +18,7 @@ def main(argv):
         temporal_ratio=FLAGS.temporal_ratio,
         from_continuous=FLAGS.continuous,
         vae_path=FLAGS.vae_path,
+        ema_weights=FLAGS.ema_weights,
     )
     model.apply_full_reset()
     model_name = os.path.basename(os.path.normpath(FLAGS.run)) + '.ts'
@@ -30,6 +31,10 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string('run', default=None, required=True, help='Run to export')
 flags.DEFINE_string('vae_path', default=None, help='Pretrained semantic VAE')
 flags.DEFINE_integer('batch_size', default=1, help='Maximum batch size')
+flags.DEFINE_bool('ema_weights',
+                  default=False,
+                  help='Use ema weights if available')
+
 flags.DEFINE_integer(
     'temporal_ratio',
     default=1024,
