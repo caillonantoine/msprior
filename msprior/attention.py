@@ -370,6 +370,7 @@ class MultivariateEmbedding(nn.Module):
                 logging.warn(
                     "pretrained_embedding is only compatible with discrete rave models, skiping"
                 )
+                self.from_pretrained = None
 
         self.num_quantizers = num_quantizers
         self.num_tokens = num_tokens
